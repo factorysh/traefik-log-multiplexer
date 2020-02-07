@@ -59,25 +59,30 @@ func (r *Router) RemoveBackend(backend string) {
 }
 
 func (r *Router) readLines(lines chan *tail.Line) {
-	var blob map[string]interface{}
+	log.Info("Reading")
 	for {
 		select {
 		case <-r.context.Done():
+			log.Info("Stop reading")
 			return
 		case line := <-lines:
+			var blob map[string]interface{}
 			err := json.Unmarshal([]byte(line.Text), &blob)
 			if err != nil {
 				log.WithError(err).Warn()
+				continue
 			}
 			backendRaw, ok := blob["BackendName"]
 			if !ok {
 				err = errors.New("This log line hasn't BackendName key")
 				log.WithError(err).Warn()
+				continue
 			}
 			backend, ok := backendRaw.(string)
 			if !ok {
 				err = errors.New("BackendName is not a string")
 				log.WithError(err).Warn()
+				continue
 			}
 			reader, ok := r.project(backend)
 			if ok {

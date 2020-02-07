@@ -6,3 +6,6 @@ binary: bin
 
 bin:
 	mkdir -p bin
+
+test:
+	go test -v github.com/factorysh/traefik-log-multiplexer/tail
