@@ -8,4 +8,4 @@ bin:
 	mkdir -p bin
 
 test:
-	go test -v github.com/factorysh/traefik-log-multiplexer/tail
+	go test -v github.com/factorysh/traefik-log-multiplexer/route
