@@ -1,9 +1,15 @@
 package conf
 
+import (
+	"errors"
+	"io/ioutil"
+	"os"
+
+	"gopkg.in/yaml.v2"
+)
 
 type Config struct {
 	LogPath string
-
 }
 
 func New() (*Config, error) {
