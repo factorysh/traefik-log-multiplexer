@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFusebix(t *testing.T) {
+func TestFusebox(t *testing.T) {
 	f := New(3)
 	assert.Equal(t, 0, f.start)
 	assert.Equal(t, 0, f.size)
