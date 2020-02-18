@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	LogPath string
+	Output  map[string]map[string]interface{}
 }
 
 func New() (*Config, error) {
