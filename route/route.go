@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Router routes events from traefik file with backend information
 type Router struct {
 	backends map[string]string // backend => project
 	projects map[string]chan *tail.Line
@@ -17,6 +18,7 @@ type Router struct {
 	context  context.Context
 }
 
+// New Router
 func New(ctx context.Context) *Router {
 	return &Router{
 		backends: make(map[string]string),
@@ -35,6 +37,8 @@ func (r *Router) Read(path string) error {
 	return nil
 }
 
+// SetProjectBackend link between project and backend
+// Docker knows this link
 func (r *Router) SetProjectBackend(project, backend string) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
