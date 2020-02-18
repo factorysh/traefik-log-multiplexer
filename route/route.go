@@ -25,20 +25,14 @@ func New(ctx context.Context) *Router {
 	}
 }
 
-func (r *Router) project(backend string) (chan *tail.Line, bool) {
-	r.lock.RLock()
-	defer r.lock.RUnlock()
-	p, ok := r.backends[backend]
-	if !ok { // backend unknown
-		log.Warn("Unknown backend : ", backend)
-		return nil, false
+// Read a path : the traefik log file
+func (r *Router) Read(path string) error {
+	t, err := tail.TailFile(path, tail.Config{Follow: true})
+	if err != nil {
+		return err
 	}
-	c, ok := r.projects[p]
-	if ok {
-		return c, true
-	}
-	log.Error("No project for backend ", backend)
-	return nil, false
+	r.readLines(t.Lines)
+	return nil
 }
 
 func (r *Router) SetProjectBackend(project, backend string) {
@@ -58,6 +52,24 @@ func (r *Router) RemoveBackend(backend string) {
 	// remove orphans projects
 }
 
+// What is the project for this backend ?
+func (r *Router) project(backend string) chan *tail.Line {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+	p, ok := r.backends[backend]
+	if !ok { // backend unknown
+		log.Warn("Unknown backend : ", backend)
+		return nil
+	}
+	c, ok := r.projects[p]
+	if ok {
+		return c
+	}
+	log.Error("No project for backend ", backend)
+	return nil
+}
+
+// read lines from Traefik logs
 func (r *Router) readLines(lines chan *tail.Line) {
 	log.Info("Reading")
 	for {
@@ -84,19 +96,10 @@ func (r *Router) readLines(lines chan *tail.Line) {
 				log.WithError(err).Warn()
 				continue
 			}
-			reader, ok := r.project(backend)
-			if ok {
+			reader := r.project(backend)
+			if reader != nil {
 				reader <- line
 			}
 		}
 	}
-}
-
-func (r *Router) Read(path string) error {
-	t, err := tail.TailFile(path, tail.Config{Follow: true})
-	if err != nil {
-		return err
-	}
-	r.readLines(t.Lines)
-	return nil
 }
