@@ -48,11 +48,12 @@ func TestBlocking(t *testing.T) {
 	l := sync.WaitGroup{}
 	l.Add(1)
 	go func() {
-		line := f.BlockingPop(context.Background())
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		line := f.BlockingPop(ctx)
 		assert.NotNil(t, line)
 		assert.Equal(t, "Fritz", line.Text)
 		l.Done()
-
 	}()
 	time.Sleep(10 * time.Millisecond)
 	f.Push(&tail.Line{
