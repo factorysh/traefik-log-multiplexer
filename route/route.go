@@ -45,11 +45,12 @@ func (r *Router) SetProjectBackend(project, backend string) {
 	r.backends[backend] = project
 }
 
+// RemoveBackend removes a backend
 func (r *Router) RemoveBackend(backend string) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	delete(r.backends, backend)
-	// remove orphans projects
+	// TODO remove orphans projects
 }
 
 // What is the project for this backend ?
