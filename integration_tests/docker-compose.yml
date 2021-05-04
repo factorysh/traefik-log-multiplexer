@@ -1,0 +1,10 @@
+---
+version: "3.7"
+
+services:
+    web:
+        image: bearstech/nginx
+        labels:
+            traefik.enable: "true"
+            traefik.backend: demo:multiplexer:web
+            traefik.frontend.rule: Host:localhost
