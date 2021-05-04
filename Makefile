@@ -8,5 +8,7 @@ bin:
 	mkdir -p bin
 
 test:
-	go test -v -cover github.com/factorysh/traefik-log-multiplexer/route
-	go test -v -cover github.com/factorysh/traefik-log-multiplexer/fusebox
+	go test -v -cover \
+		github.com/factorysh/traefik-log-multiplexer/route \
+		github.com/factorysh/traefik-log-multiplexer/fusebox \
+		github.com/factorysh/traefik-log-multiplexer/providers/docker
