@@ -15,7 +15,7 @@ type StdoutOutput struct {
 }
 
 func (s *StdoutOutput) Write(ts time.Time, line string, meta map[string]interface{}) error {
-	fmt.Println(ts, line, meta)
+	fmt.Printf("  %v\n  %v\n%v", ts, line, meta)
 	return nil
 }
 
