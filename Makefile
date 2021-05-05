@@ -9,6 +9,5 @@ bin:
 
 test:
 	go test -v -cover \
-		github.com/factorysh/traefik-log-multiplexer/route \
-		github.com/factorysh/traefik-log-multiplexer/fusebox \
-		github.com/factorysh/traefik-log-multiplexer/providers/docker
+		github.com/factorysh/traefik-log-multiplexer/api \
+		github.com/factorysh/traefik-log-multiplexer/filter/docker
