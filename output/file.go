@@ -1,30 +1,36 @@
 package output
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
+	"github.com/factorysh/traefik-log-multiplexer/api"
 	"github.com/influxdata/tail"
+	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
 )
 
 func init() {
 	if Outputs == nil {
-		Outputs = make(map[string]NewOutput)
+		Outputs = make(map[string]OutputFactory)
 	}
-	Outputs["file"] = func(config map[string]interface{}) (Output, error) {
-		pathRaw, ok := config["path_pattern"]
-		if !ok {
-			return nil, errors.New("path_pattern key is mandatory")
-		}
-		path, ok := pathRaw.(string)
-		if !ok {
-			return nil, errors.New("path_pattern must be a string")
-		}
-		return NewFile(path), nil
+	Outputs["file"] = FileOutputFactory
+}
+
+type FileOutputConfig struct {
+	PathPattern string `yaml:"path_pattern"`
+}
+
+func FileOutputFactory(rawCfg map[string]interface{}) (api.Output, error) {
+	var cfg FileOutputConfig
+	err := mapstructure.Decode(rawCfg, &cfg)
+	if err != nil {
+		return nil, err
 	}
+	return NewFile(cfg.PathPattern), nil
+
 }
 
 // File writes logs to file
@@ -42,6 +48,11 @@ func NewFile(pathPattern string) *File {
 	}
 }
 
+func (f *File) Write(ts time.Time, line string, meta map[string]interface{}) error {
+	return nil
+}
+
+// FIXME
 func (f *File) Read(project string, line *tail.Line) {
 	f.lock.RLock()
 	file, ok := f.files[project]
@@ -59,22 +70,4 @@ func (f *File) Read(project string, line *tail.Line) {
 	}
 	file.Write([]byte(line.Text))
 	// TODO flush anytime ?
-}
-
-// RemoveProject removes a project
-func (f *File) RemoveProject(project string) {
-	l := log.WithField("project", project)
-	f.lock.Lock()
-	defer f.lock.Unlock()
-	file, ok := f.files[project]
-	if ok {
-		err := file.Close()
-		if err != nil {
-			l.WithError(err).Error()
-		}
-		delete(f.files, project)
-		l.Info("Removed")
-	} else {
-		l.Warning("Try to remove unknown project")
-	}
 }

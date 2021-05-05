@@ -1,15 +1,15 @@
 package output
 
 import (
-	"github.com/influxdata/tail"
+	"github.com/factorysh/traefik-log-multiplexer/api"
 )
 
-var Outputs map[string]NewOutput
+var Outputs map[string]OutputFactory
 
-type NewOutput func(map[string]interface{}) (Output, error)
-
-// Output send logs somewhere
-type Output interface {
-	Read(project string, line *tail.Line)
-	RemoveProject(project string)
+func init() {
+	if Outputs == nil {
+		Outputs = make(map[string]OutputFactory)
+	}
 }
+
+type OutputFactory func(map[string]interface{}) (api.Output, error)
