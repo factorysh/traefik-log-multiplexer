@@ -111,8 +111,5 @@ func (d *Demultiplexer) Start(ctx context.Context) error {
 			}
 		}(f)
 	}
-	select {
-	case err := <-d.closing:
-		return err
-	}
+	return <-d.closing
 }
