@@ -1,40 +1,49 @@
 package tpl
 
 import (
-	"io"
 	"regexp"
 )
 
 type Template struct {
-	vars   []string
-	chunks []string
+	vars      []string
+	chunks    [][]byte
+	chunkSize int
 }
 
-func Parse(txt string) (*Template, error) {
+func Parse(txt []byte) (*Template, error) {
 	r := regexp.MustCompile(`\$\{\s*([a-zA-Z0-9_.\-]+)\s*\}`)
-	m := r.FindAllSubmatchIndex([]byte(txt), -1)
+	m := r.FindAllSubmatchIndex(txt, -1)
 	if m == nil {
 		return nil, nil
 	}
 	tpl := &Template{
 		vars:   make([]string, len(m)),
-		chunks: make([]string, len(m)+1),
+		chunks: make([][]byte, len(m)+1),
 	}
 	start := 0
 	for i, j := range m {
-		tpl.vars[i] = txt[j[2]:j[3]]
+		tpl.vars[i] = string(txt[j[2]:j[3]])
 		tpl.chunks[i] = txt[start:j[0]]
+		tpl.chunkSize += j[0] - start
 		start = j[1]
 	}
 	tpl.chunks[len(tpl.chunks)-1] = txt[start:]
 	return tpl, nil
 }
 
-func (t *Template) Execute(w io.Writer, data map[string]string) error {
-	for i := 0; i < len(t.vars); i++ {
-		w.Write([]byte(t.chunks[i]))
-		w.Write([]byte(data[t.vars[i]]))
+func (t *Template) Execute(data map[string]string) ([]byte, error) {
+	valueSize := 0
+	for _, k := range t.vars {
+		valueSize += len(data[k])
 	}
-	w.Write([]byte(t.chunks[len(t.chunks)-1]))
-	return nil
+	response := make([]byte, valueSize+t.chunkSize)
+	start := 0
+	for i := 0; i < len(t.vars); i++ {
+		copy(response[start:], t.chunks[i])
+		start += len(t.chunks[i])
+		copy(response[start:], data[t.vars[i]])
+		start += len(data[t.vars[i]])
+	}
+	copy(response[start:], t.chunks[len(t.chunks)-1])
+	return response, nil
 }
