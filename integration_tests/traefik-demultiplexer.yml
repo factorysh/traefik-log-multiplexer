@@ -1,0 +1,15 @@
+---
+
+input:
+  file:
+    path: log/access.log
+
+filters:
+  - docker:
+      labels:
+        - sh.factory.project
+
+output:
+  stdout:
+#  file: 
+#    path_pattern: ./traefik_${ sh.factory.project }.log

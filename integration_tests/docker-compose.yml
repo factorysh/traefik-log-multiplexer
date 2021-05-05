@@ -8,6 +8,7 @@ services:
             traefik.enable: "true"
             traefik.backend: demo:multiplexer:web
             traefik.frontend.rule: Host:localhost
+            sh.factory.project: demo
 
     traefik:
         image: traefik:1.7
