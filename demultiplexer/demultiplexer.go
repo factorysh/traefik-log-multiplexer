@@ -51,7 +51,7 @@ func New(cfg *conf.Config) (*Demultiplexer, error) {
 		closing: make(chan error),
 	}
 	if len(cfg.Input) != 1 {
-		return nil, fmt.Errorf("one input, not %w", len(cfg.Input))
+		return nil, fmt.Errorf("one input, not %d", len(cfg.Input))
 	}
 	var err error
 	for name, args := range cfg.Input {
