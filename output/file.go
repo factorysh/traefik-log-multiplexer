@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/factorysh/traefik-log-multiplexer/api"
-	"github.com/influxdata/tail"
+	"github.com/factorysh/traefik-log-multiplexer/tpl"
 	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
 )
@@ -29,45 +29,55 @@ func FileOutputFactory(rawCfg map[string]interface{}) (api.Output, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewFile(cfg.PathPattern), nil
+	if cfg.PathPattern == "" {
+		return nil, fmt.Errorf("path_pattern is mandatory")
+	}
+	return NewFile(cfg.PathPattern)
 
 }
 
 // File writes logs to file
 type File struct {
 	pathPattern string
+	template    *tpl.Template
 	files       map[string]*os.File
 	lock        sync.RWMutex
 }
 
 // NewFile returns new File, with a path pattern
-func NewFile(pathPattern string) *File {
+func NewFile(pathPattern string) (*File, error) {
+	t, err := tpl.Parse([]byte(pathPattern))
+	if err != nil {
+		return nil, err
+	}
 	return &File{
 		pathPattern: pathPattern,
+		template:    t,
 		files:       make(map[string]*os.File),
-	}
+	}, nil
 }
 
 func (f *File) Write(ts time.Time, line string, meta map[string]interface{}) error {
-	return nil
-}
-
-// FIXME
-func (f *File) Read(project string, line *tail.Line) {
+	path, err := f.template.Execute(meta)
+	if err != nil {
+		return err
+	}
+	spath := string(path)
 	f.lock.RLock()
-	file, ok := f.files[project]
+	file, ok := f.files[spath]
 	f.lock.RUnlock()
+
 	if !ok {
-		var err error
-		file, err = os.Open(fmt.Sprintf(f.pathPattern, project))
+		file, err = os.Open(spath)
 		if err != nil {
-			log.WithField("project", project).WithError(err).Error()
-			return
+			log.WithField("path", path).WithError(err).Error()
+			return err
 		}
 		f.lock.Lock()
-		f.files[project] = file
+		f.files[spath] = file
 		f.lock.Unlock()
 	}
-	file.Write([]byte(line.Text))
+	file.Write([]byte(line))
 	// TODO flush anytime ?
+	return nil
 }
