@@ -68,9 +68,9 @@ func (f *File) Write(ts time.Time, line string, meta map[string]interface{}) err
 	f.lock.RUnlock()
 
 	if !ok {
-		file, err = os.Open(spath)
+		file, err = os.OpenFile(spath, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
-			log.WithField("path", path).WithError(err).Error()
+			log.WithField("path", spath).WithError(err).Error()
 			return err
 		}
 		f.lock.Lock()
