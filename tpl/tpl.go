@@ -29,6 +29,7 @@ func Parse(txt []byte) (*Template, error) {
 		start = j[1]
 	}
 	tpl.chunks[len(tpl.chunks)-1] = txt[start:]
+	tpl.chunkSize += len(txt) - start
 	return tpl, nil
 }
 
