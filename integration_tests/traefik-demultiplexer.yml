@@ -11,5 +11,5 @@ filters:
 
 output:
   stdout:
-#  file: 
-#    path_pattern: ./traefik_${ sh.factory.project }.log
+  file: 
+    path_pattern: ./traefik_${ sh.factory.project }.log
