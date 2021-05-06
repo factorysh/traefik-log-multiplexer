@@ -7,6 +7,7 @@ import (
 
 	"github.com/valyala/fastjson"
 
+	"github.com/factorysh/traefik-log-multiplexer/admin"
 	"github.com/factorysh/traefik-log-multiplexer/api"
 	"github.com/factorysh/traefik-log-multiplexer/conf"
 	"github.com/factorysh/traefik-log-multiplexer/filter"
@@ -20,6 +21,7 @@ type Demultiplexer struct {
 	filters []api.Filter
 	outputs []api.Output
 	closing chan error
+	admin   *admin.Admin
 }
 
 func (d *Demultiplexer) Write(ts time.Time, line string) error {
@@ -49,6 +51,7 @@ func New(cfg *conf.Config) (*Demultiplexer, error) {
 		filters: make([]api.Filter, 0),
 		outputs: make([]api.Output, 0),
 		closing: make(chan error),
+		admin:   admin.New(cfg.Admin.Listen, cfg.Admin.Prometheus),
 	}
 	if len(cfg.Input) != 1 {
 		return nil, fmt.Errorf("one input, not %d", len(cfg.Input))
@@ -97,6 +100,7 @@ func New(cfg *conf.Config) (*Demultiplexer, error) {
 }
 
 func (d *Demultiplexer) Start(ctx context.Context) error {
+	d.admin.Start(ctx)
 	go func(i api.Input) {
 		err := i.Start(ctx)
 		if err != nil {

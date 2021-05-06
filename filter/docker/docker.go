@@ -10,7 +10,16 @@ import (
 	"github.com/factorysh/docker-visitor/visitor"
 	"github.com/factorysh/traefik-log-multiplexer/api"
 	"github.com/factorysh/traefik-log-multiplexer/filter"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/valyala/fastjson"
+)
+
+var (
+	dockerContainerEvents = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "demultiplexer_docker_events",
+		Help: "The total number of docker events",
+	})
 )
 
 func init() {
@@ -18,6 +27,7 @@ func init() {
 		filter.Filters = map[string]filter.FilterFactory{}
 	}
 	filter.Filters["docker"] = DockerFactory
+
 }
 
 type DockerProvider struct {
@@ -35,6 +45,7 @@ func DockerFactory(cfg map[string]interface{}) (api.Filter, error) {
 
 func (dp *DockerProvider) create(container *types.ContainerJSON) error {
 	dp.containers.Add(container)
+	dockerContainerEvents.Inc()
 	return nil
 }
 
@@ -42,10 +53,13 @@ func (dp *DockerProvider) visitor(action string, container *types.ContainerJSON)
 	switch action {
 	case visitor.START:
 		dp.containers.Add(container)
+		dockerContainerEvents.Inc()
 	case visitor.STOP:
 		dp.containers.Remove(container.ID)
+		dockerContainerEvents.Inc()
 	case visitor.DIE:
 		dp.containers.Remove(container.ID)
+		dockerContainerEvents.Inc()
 	}
 }
 
