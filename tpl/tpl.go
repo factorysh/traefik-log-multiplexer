@@ -1,6 +1,7 @@
 package tpl
 
 import (
+	"fmt"
 	"regexp"
 )
 
@@ -31,18 +32,23 @@ func Parse(txt []byte) (*Template, error) {
 	return tpl, nil
 }
 
-func (t *Template) Execute(data map[string]string) ([]byte, error) {
+func (t *Template) Execute(data map[string]interface{}) ([]byte, error) {
 	valueSize := 0
 	for _, k := range t.vars {
-		valueSize += len(data[k])
+		v, ok := data[k].(string)
+		if !ok {
+			return nil, fmt.Errorf("only string is handled : %s=>%v", k, data[k])
+		}
+		valueSize += len(v)
 	}
 	response := make([]byte, valueSize+t.chunkSize)
 	start := 0
 	for i := 0; i < len(t.vars); i++ {
 		copy(response[start:], t.chunks[i])
 		start += len(t.chunks[i])
-		copy(response[start:], data[t.vars[i]])
-		start += len(data[t.vars[i]])
+		v, _ := data[t.vars[i]].(string)
+		copy(response[start:], v)
+		start += len(v)
 	}
 	copy(response[start:], t.chunks[len(t.chunks)-1])
 	return response, nil

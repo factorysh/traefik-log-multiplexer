@@ -9,7 +9,7 @@ import (
 func TestParse(t *testing.T) {
 	tp, err := Parse([]byte("/tmp/demo-${pim.pam.poum}-${ hop }.${txt}"))
 	assert.NoError(t, err)
-	resp, err := tp.Execute(map[string]string{
+	resp, err := tp.Execute(map[string]interface{}{
 		"pim.pam.poum": "one",
 		"txt":          "three",
 		"hop":          "two",
