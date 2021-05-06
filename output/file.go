@@ -20,7 +20,7 @@ func init() {
 }
 
 type FileOutputConfig struct {
-	PathPattern string `yaml:"path_pattern"`
+	PathPattern string `mapstructure:"path_pattern"`
 }
 
 func FileOutputFactory(rawCfg map[string]interface{}) (api.Output, error) {
