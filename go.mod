@@ -12,6 +12,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/onrik/logrus v0.9.0
 	github.com/prometheus/client_golang v1.10.0
+	github.com/prometheus/client_model v0.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tinylib/msgp v1.1.5 // indirect

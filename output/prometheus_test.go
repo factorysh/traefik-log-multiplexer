@@ -1,10 +1,11 @@
 package output
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,6 +22,9 @@ func TestPrometheus(t *testing.T) {
 	assert.NoError(t, err)
 	pp, ok := p.(*PrometheusOutput)
 	assert.True(t, ok)
-	fmt.Println(pp.gatherers["demo"].hits.MetricVec)
-	//assert.True(t, false)
+	var m dto.Metric
+	err = pp.gatherers["demo"].hits.With(prometheus.Labels{"status": "2xx"}).Write(&m)
+	assert.NoError(t, err)
+	v := m.Counter.GetValue()
+	assert.Equal(t, float64(1), v)
 }
