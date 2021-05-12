@@ -1,6 +1,9 @@
 package output
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"net"
 	"net/http"
@@ -11,6 +14,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fastjson"
 )
 
@@ -30,18 +34,19 @@ type PrometheusConfig struct {
 type TraefikProm struct {
 	registry *prometheus.Registry
 	hits     *prometheus.CounterVec
+	mac      []byte
 }
 
-func NewTraefikProm() *TraefikProm {
+func NewTraefikProm(project, key []byte) *TraefikProm {
 	t := &TraefikProm{
 		registry: prometheus.NewRegistry(),
 		hits: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "http_hit",
 			Help: "HTTP hit, group by status",
 		}, []string{"status"}),
+		mac: hmac.New(sha256.New, key).Sum(project),
 	}
 	t.registry.MustRegister(t.hits)
-
 	return t
 }
 
@@ -96,7 +101,7 @@ func (p *PrometheusOutput) Write(ts time.Time, line string, meta map[string]inte
 
 	_, ok = p.gatherers[key]
 	if !ok {
-		p.gatherers[key] = NewTraefikProm()
+		p.gatherers[key] = NewTraefikProm([]byte(key), []byte(p.config.Salt))
 	}
 	status := fastjson.GetInt([]byte(line), "OriginStatus")
 	p.gatherers[key].hits.WithLabelValues(fmt.Sprintf("%dxx", status/100)).Inc()
@@ -104,7 +109,13 @@ func (p *PrometheusOutput) Write(ts time.Time, line string, meta map[string]inte
 }
 
 func (p *PrometheusOutput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	slugs := strings.Split(r.RequestURI, "/")
+	tokRaw := r.URL.Query().Get("t")
+	if len(tokRaw) == 0 {
+		w.WriteHeader(401)
+		return
+	}
+
+	slugs := strings.Split(r.URL.Path, "/")
 	if len(slugs) < 3 {
 		w.WriteHeader(404)
 		return
@@ -112,6 +123,16 @@ func (p *PrometheusOutput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t, ok := p.gatherers[slugs[2]]
 	if !ok {
 		w.WriteHeader(404)
+		return
+	}
+	tok, err := base64.StdEncoding.DecodeString(tokRaw)
+	if err != nil {
+		log.WithField("token", tokRaw).WithError(err).Info("Can't decode base64 token")
+		w.WriteHeader(400)
+		return
+	}
+	if !hmac.Equal(t.mac, tok) {
+		w.WriteHeader(401)
 		return
 	}
 	promhttp.HandlerFor(t.registry, promhttp.HandlerOpts{}).ServeHTTP(w, r)

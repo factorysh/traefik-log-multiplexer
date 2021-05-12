@@ -1,6 +1,9 @@
 package output
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"strings"
@@ -13,9 +16,10 @@ import (
 )
 
 func TestPrometheus(t *testing.T) {
+	salt := "queide5Weisoof7booWae7UeM2uataip"
 	p, err := PrometheusFactory(map[string]interface{}{
 		"label": "com.docker.compose.project",
-		"salt":  "queide5Weisoof7booWae7UeM2uataip",
+		"salt":  salt,
 		"addr":  "127.0.0.1:0",
 	})
 	assert.NoError(t, err)
@@ -36,10 +40,13 @@ func TestPrometheus(t *testing.T) {
 
 	resp, err := http.Get(fmt.Sprintf("http://%s/metrics/demo", s))
 	assert.NoError(t, err)
+	assert.Equal(t, 401, resp.StatusCode)
+	tok := base64.StdEncoding.EncodeToString(hmac.New(sha256.New, []byte(salt)).Sum([]byte("demo")))
+	resp, err = http.Get(fmt.Sprintf("http://%s/metrics/demo?t=%s", s, tok))
+	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.True(t, strings.HasPrefix(resp.Header.Get("content-type"), "text/plain"))
-	fmt.Println(resp)
-	resp, err = http.Get(fmt.Sprintf("http://%s/metrics/plop", s))
+	resp, err = http.Get(fmt.Sprintf("http://%s/metrics/plop?t=%s", s, tok))
 	assert.NoError(t, err)
 	assert.Equal(t, 404, resp.StatusCode)
 
