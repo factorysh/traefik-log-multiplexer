@@ -13,3 +13,7 @@ output:
   stdout:
   file: 
     path_pattern: ./traefik_${ sh.factory.project }.log
+  fluent:
+    tag: demultiplexer
+    labels:
+        - sh.factory.project
