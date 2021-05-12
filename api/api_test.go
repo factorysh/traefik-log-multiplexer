@@ -16,6 +16,10 @@ func (o *OutputMockup) Write(ts time.Time, line string, meta map[string]interfac
 	return nil
 }
 
+func (o *OutputMockup) Close() error {
+	return nil
+}
+
 func TestJsonEngine(t *testing.T) {
 	o := &OutputMockup{}
 	e := NewJsonEngine(o)
