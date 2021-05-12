@@ -12,4 +12,6 @@ There is multiple outputs.
 
 **stdout**, everybody loves debug.
 
-**prometheus**, for every a prometheus export with a password. Hit per *status*. Latencies per *status family*, per *method*.
+**prometheus**, for every a prometheus export with a password. Hit per *status*. Latencies per *status family*, per *method*. You can plug your Prometheus, Telegraf it's your choice.
+
+[ ] **logstash**, yeah, a TraefikBeat!
