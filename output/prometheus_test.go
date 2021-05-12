@@ -1,6 +1,9 @@
 package output
 
 import (
+	"fmt"
+	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -11,11 +14,12 @@ import (
 
 func TestPrometheus(t *testing.T) {
 	p, err := PrometheusFactory(map[string]interface{}{
-		"label":  "com.docker.compose.project",
-		"salt":   "queide5Weisoof7booWae7UeM2uataip",
-		"listen": "127.0.0.1:0",
+		"label": "com.docker.compose.project",
+		"salt":  "queide5Weisoof7booWae7UeM2uataip",
+		"addr":  "127.0.0.1:0",
 	})
 	assert.NoError(t, err)
+	defer p.Close()
 	err = p.Write(time.Now(), `{"OriginStatus": 200}`, map[string]interface{}{
 		"com.docker.compose.project": "demo",
 	})
@@ -27,4 +31,16 @@ func TestPrometheus(t *testing.T) {
 	assert.NoError(t, err)
 	v := m.Counter.GetValue()
 	assert.Equal(t, float64(1), v)
+
+	s := pp.listener.Addr().String()
+
+	resp, err := http.Get(fmt.Sprintf("http://%s/metrics/demo", s))
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.True(t, strings.HasPrefix(resp.Header.Get("content-type"), "text/plain"))
+	fmt.Println(resp)
+	resp, err = http.Get(fmt.Sprintf("http://%s/metrics/plop", s))
+	assert.NoError(t, err)
+	assert.Equal(t, 404, resp.StatusCode)
+
 }

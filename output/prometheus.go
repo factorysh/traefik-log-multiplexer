@@ -2,11 +2,15 @@ package output
 
 import (
 	"fmt"
+	"net"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/factorysh/traefik-log-multiplexer/api"
 	"github.com/mitchellh/mapstructure"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/valyala/fastjson"
 )
 
@@ -18,9 +22,9 @@ func init() {
 }
 
 type PrometheusConfig struct {
-	Salt   string
-	Listen string
-	Label  string
+	Salt  string
+	Addr  string
+	Label string
 }
 
 type TraefikProm struct {
@@ -44,6 +48,8 @@ func NewTraefikProm() *TraefikProm {
 type PrometheusOutput struct {
 	gatherers map[string]*TraefikProm
 	config    *PrometheusConfig
+	server    *http.Server
+	listener  net.Listener
 }
 
 func PrometheusFactory(rawCfg map[string]interface{}) (api.Output, error) {
@@ -53,14 +59,29 @@ func PrometheusFactory(rawCfg map[string]interface{}) (api.Output, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &PrometheusOutput{
+
+	l, err := net.Listen("tcp", cfg.Addr)
+	if err != nil {
+		return nil, err
+	}
+
+	mux := http.NewServeMux()
+	p := &PrometheusOutput{
 		gatherers: make(map[string]*TraefikProm),
 		config:    &cfg,
-	}, nil
+		listener:  l,
+		server: &http.Server{
+			Addr:    cfg.Addr,
+			Handler: mux,
+		},
+	}
+	mux.Handle("/metrics/", p)
+	go p.server.Serve(l)
+	return p, nil
 }
 
 func (p *PrometheusOutput) Close() error {
-	return nil
+	return p.server.Close()
 }
 
 func (p *PrometheusOutput) Write(ts time.Time, line string, meta map[string]interface{}) error {
@@ -80,4 +101,18 @@ func (p *PrometheusOutput) Write(ts time.Time, line string, meta map[string]inte
 	status := fastjson.GetInt([]byte(line), "OriginStatus")
 	p.gatherers[key].hits.WithLabelValues(fmt.Sprintf("%dxx", status/100)).Inc()
 	return nil
+}
+
+func (p *PrometheusOutput) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	slugs := strings.Split(r.RequestURI, "/")
+	if len(slugs) < 3 {
+		w.WriteHeader(404)
+		return
+	}
+	t, ok := p.gatherers[slugs[2]]
+	if !ok {
+		w.WriteHeader(404)
+		return
+	}
+	promhttp.HandlerFor(t.registry, promhttp.HandlerOpts{}).ServeHTTP(w, r)
 }
