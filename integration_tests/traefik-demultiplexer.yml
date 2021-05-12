@@ -17,3 +17,7 @@ output:
     tag: demultiplexer
     labels:
         - sh.factory.project
+  prometheus:
+    label: sh.factory.project
+    #salt: aiw2eizai1equoYohph3iy4OzuHee1Ne
+    addr: 127.0.0.1:8084

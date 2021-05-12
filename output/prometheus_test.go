@@ -24,7 +24,11 @@ func TestPrometheus(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	defer p.Close()
-	err = p.Write(time.Now(), `{"OriginStatus": 200}`, map[string]interface{}{
+	err = p.Write(time.Now(), `{
+		"OriginStatus": 200,
+		"RequestMethod":"GET",
+		"Duration":42
+		}`, map[string]interface{}{
 		"com.docker.compose.project": "demo",
 	})
 	assert.NoError(t, err)
