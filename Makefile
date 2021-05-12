@@ -10,4 +10,5 @@ bin:
 test:
 	go test -v -cover \
 		github.com/factorysh/traefik-log-multiplexer/api \
+		github.com/factorysh/traefik-log-multiplexer/output \
 		github.com/factorysh/traefik-log-multiplexer/filter/docker
