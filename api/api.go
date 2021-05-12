@@ -22,6 +22,7 @@ type Filter interface {
 
 type Output interface {
 	Write(ts time.Time, line string, meta map[string]interface{}) error
+	Close() error
 }
 
 type JsonEngine struct {

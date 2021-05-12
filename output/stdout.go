@@ -19,6 +19,10 @@ func (s *StdoutOutput) Write(ts time.Time, line string, meta map[string]interfac
 	return nil
 }
 
+func (s *StdoutOutput) Close() error {
+	return nil
+}
+
 func StdoutOutputFactory(cfg map[string]interface{}) (api.Output, error) {
 	return &StdoutOutput{}, nil
 }

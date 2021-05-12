@@ -81,3 +81,15 @@ func (f *File) Write(ts time.Time, line string, meta map[string]interface{}) err
 	// TODO flush anytime ?
 	return nil
 }
+
+func (f *File) Close() error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	for _, ff := range f.files {
+		err := ff.Close()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
