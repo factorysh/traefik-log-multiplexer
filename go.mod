@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/docker/docker v1.13.1
-	github.com/factorysh/docker-visitor v1.7.1
+	github.com/factorysh/docker-visitor v1.7.2
 	github.com/fluent/fluent-logger-golang v1.6.0
 	github.com/imdario/mergo v0.3.12
 	github.com/influxdata/tail v1.0.0
