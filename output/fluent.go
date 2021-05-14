@@ -1,12 +1,12 @@
 package output
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/factorysh/traefik-log-multiplexer/api"
 	"github.com/imdario/mergo"
+	"github.com/valyala/fastjson"
 
 	"github.com/fluent/fluent-logger-golang/fluent"
 )
@@ -19,14 +19,17 @@ func init() {
 }
 
 type FluentOutputConfig struct {
-	Labels []string
-	Tag    string
-	Config *fluent.Config
+	Labels   []string
+	Tag      string
+	Timezone string
+	Config   *fluent.Config
 }
 
 type FluentOutput struct {
-	fluent *fluent.Fluent
-	config *FluentOutputConfig
+	fluent   *fluent.Fluent
+	config   *FluentOutputConfig
+	parser   *fastjson.Parser
+	location *time.Location
 }
 
 func FluentOutputFactory(rawCfg map[string]interface{}) (api.Output, error) {
@@ -52,6 +55,13 @@ func FluentOutputFactory(rawCfg map[string]interface{}) (api.Output, error) {
 			}
 		}
 	}
+	if cfg.Timezone == "" {
+		cfg.Timezone = "UTC"
+	}
+	l, err := time.LoadLocation(cfg.Timezone)
+	if err != nil {
+		return nil, err
+	}
 	fluentCfg, ok := rawCfg["config"]
 	if ok {
 		err := mergo.Map(cfg.Config, fluentCfg)
@@ -68,8 +78,10 @@ func FluentOutputFactory(rawCfg map[string]interface{}) (api.Output, error) {
 		return nil, err
 	}
 	return &FluentOutput{
-		fluent: f,
-		config: cfg,
+		fluent:   f,
+		config:   cfg,
+		parser:   &fastjson.Parser{},
+		location: l,
 	}, nil
 }
 
@@ -78,20 +90,24 @@ func (f *FluentOutput) Close() error {
 }
 
 func (f *FluentOutput) Write(ts time.Time, line string, meta map[string]interface{}) error {
-	var message map[string]interface{}
-	err := json.Unmarshal([]byte(line), &message)
+	v, err := f.parser.Parse(line)
 	if err != nil {
 		return err
 	}
-	timeRaw, ok := message["time"]
-	if !ok {
-		return fmt.Errorf("where is my time")
+	o, err := v.Object()
+	if err != nil {
+		return err
 	}
-	t, ok := timeRaw.(string)
-	if !ok {
-		return fmt.Errorf("bad time format : %v", timeRaw)
+	t := o.Get("time")
+	if t == nil {
+		return fmt.Errorf("no time in %s", line)
 	}
-	tt, err := time.Parse(time.RFC3339, t)
+
+	st, err := t.StringBytes()
+	if err != nil {
+		return err
+	}
+	tt, err := time.ParseInLocation("2006-01-02T15:04:05Z", string(st), f.location)
 	if err != nil {
 		return err
 	}
@@ -100,6 +116,9 @@ func (f *FluentOutput) Write(ts time.Time, line string, meta map[string]interfac
 	for _, label := range f.config.Labels {
 		data[label] = meta[label]
 	}
-	message["docker_provider"] = data
-	return f.fluent.PostWithTime(f.config.Tag, tt, message)
+
+	return f.fluent.PostWithTime(f.config.Tag, tt, &LogMarshaler{
+		line: o,
+		meta: data,
+	})
 }

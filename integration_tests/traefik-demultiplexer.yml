@@ -11,10 +11,11 @@ filters:
 
 output:
   stdout:
-  file: 
-    path_pattern: ./traefik_${ sh.factory.project }.log
+  #file:
+  #  path_pattern: ./traefik_${ sh.factory.project }.log
   fluent:
     tag: demultiplexer
+    timezone: Europe/Paris
     labels:
         - sh.factory.project
   prometheus:
