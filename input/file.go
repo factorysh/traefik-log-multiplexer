@@ -47,24 +47,34 @@ func NewFileInput(rawCfg map[string]interface{}) (api.Input, error) {
 }
 
 func (f *FileInput) Start(ctx context.Context) error {
-	t, err := tail.TailFile(f.path, tail.Config{Follow: true})
-	if err != nil {
-		return err
-	}
+	l := log.WithField("path", f.path)
 	for {
-		select {
-		case <-ctx.Done():
-			log.Info("Stop reading")
-			return nil
-		case line := <-t.Lines:
-			if line.Err != nil {
-				log.WithField("line", line).WithError(err).Info("Tail")
-				continue
-			}
-			err = f.writer.Write(line.Time, line.Text)
-			if err != nil {
-				log.WithField("line", line).WithError(err).Info("Write")
-				continue
+		t, err := tail.TailFile(f.path, tail.Config{Follow: true})
+		if err != nil {
+			return err
+		}
+		l.Info("tail")
+		again := true
+		for again {
+			select {
+			case <-ctx.Done():
+				l.Info("Stop reading")
+				return nil
+			case line := <-t.Lines:
+				if line == nil {
+					l.Warn("Oups the file has vanished")
+					again = false
+					break
+				}
+				if line.Err != nil {
+					l.WithField("line", line).WithError(err).Info("Tail")
+					continue
+				}
+				err = f.writer.Write(line.Time, line.Text)
+				if err != nil {
+					l.WithField("line", line).WithError(err).Info("Write")
+					continue
+				}
 			}
 		}
 	}
