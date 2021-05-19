@@ -17,6 +17,37 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type SentryHook struct {
+	levels map[log.Level]sentry.Level
+}
+
+func NewSentryHook() *SentryHook {
+	return &SentryHook{
+		levels: map[log.Level]sentry.Level{
+			log.WarnLevel:  sentry.LevelWarning,
+			log.ErrorLevel: sentry.LevelError,
+			log.PanicLevel: sentry.LevelFatal,
+		},
+	}
+}
+
+func (s *SentryHook) Levels() []log.Level {
+	return []log.Level{
+		log.WarnLevel,
+		log.ErrorLevel,
+		log.PanicLevel,
+	}
+}
+
+func (s *SentryHook) Fire(entry *log.Entry) error {
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetContext("logrus", entry.Data)
+		scope.SetLevel(s.levels[entry.Level])
+	})
+	sentry.CaptureMessage(entry.Message)
+	return nil
+}
+
 func main() {
 	// Logrus hook for adding file name and line to logs
 	filenameHook := filename.NewHook()
@@ -45,6 +76,8 @@ func main() {
 			log.WithError(err).Error()
 			return
 		}
+		log.AddHook(NewSentryHook())
+		log.Info("Sentry configured")
 		// Flush buffered events before the program terminates.
 		// Set the timeout to the maximum duration the program can afford to wait.
 		defer sentry.Flush(2 * time.Second)
