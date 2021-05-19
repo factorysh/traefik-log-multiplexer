@@ -10,6 +10,7 @@ import (
 	"github.com/factorysh/docker-visitor/visitor"
 	"github.com/factorysh/traefik-log-multiplexer/api"
 	"github.com/factorysh/traefik-log-multiplexer/filter"
+	"github.com/getsentry/sentry-go"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/valyala/fastjson"
@@ -78,7 +79,7 @@ func (dp *DockerProvider) Start(ctx context.Context) error {
 	return dp.watcher.Start(ctx)
 }
 
-func (dp *DockerProvider) Filter(ts time.Time, data *fastjson.Value, meta map[string]interface{}) error {
+func (dp *DockerProvider) Filter(ctx context.Context, ts time.Time, data *fastjson.Value, meta map[string]interface{}) error {
 	backend := data.GetStringBytes("BackendAddr")
 	if len(backend) == 0 {
 		return nil
@@ -90,6 +91,9 @@ func (dp *DockerProvider) Filter(ts time.Time, data *fastjson.Value, meta map[st
 	labels := []string{"sh.factory.project"}
 	for _, label := range labels {
 		meta[label] = container.Config.Labels[label]
+	}
+	if hub := sentry.GetHubFromContext(ctx); hub != nil {
+		hub.Scope().SetTag("project", container.Config.Labels["sh.factory.project"])
 	}
 	return nil
 }

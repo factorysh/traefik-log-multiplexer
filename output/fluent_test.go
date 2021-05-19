@@ -1,6 +1,7 @@
 package output
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strconv"
@@ -56,7 +57,7 @@ func TestFluent(t *testing.T) {
 	ff, ok := f.(*FluentOutput)
 	assert.True(t, ok)
 	assert.Equal(t, int(port), ff.config.Config.FluentPort)
-	err = f.Write(time.Now(), `{"beuha": "aussi", "time":"2021-05-04T16:54:20Z"}`, map[string]interface{}{"age": 42})
+	err = f.Write(context.TODO(), time.Now(), `{"beuha": "aussi", "time":"2021-05-04T16:54:20Z"}`, map[string]interface{}{"age": 42})
 	if err != nil {
 		panic(err)
 	}

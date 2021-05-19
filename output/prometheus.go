@@ -1,6 +1,7 @@
 package output
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -94,7 +95,7 @@ func (p *PrometheusOutput) Close() error {
 	return p.server.Close()
 }
 
-func (p *PrometheusOutput) Write(ts time.Time, line string, meta map[string]interface{}) error {
+func (p *PrometheusOutput) Write(ctx context.Context, ts time.Time, line string, meta map[string]interface{}) error {
 	keyRaw, ok := meta[p.config.Label]
 	if !ok { // it's an anonymous log
 		return nil

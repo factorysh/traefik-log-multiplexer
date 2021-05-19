@@ -13,15 +13,15 @@ type Input interface {
 }
 
 type Writer interface {
-	Write(ts time.Time, line string) error
+	Write(ctx context.Context, ts time.Time, line string) error
 }
 type Filter interface {
-	Filter(ts time.Time, data *fastjson.Value, meta map[string]interface{}) error
+	Filter(ctx context.Context, ts time.Time, data *fastjson.Value, meta map[string]interface{}) error
 	Start(context.Context) error
 }
 
 type Output interface {
-	Write(ts time.Time, line string, meta map[string]interface{}) error
+	Write(ctx context.Context, ts time.Time, line string, meta map[string]interface{}) error
 	Close() error
 }
 
@@ -38,17 +38,17 @@ func NewJsonEngine(output Output, filters ...Filter) *JsonEngine {
 	}
 }
 
-func (j *JsonEngine) Write(ts time.Time, line string) error {
+func (j *JsonEngine) Write(ctx context.Context, ts time.Time, line string) error {
 	p, err := j.parser.Parse(line)
 	if err != nil {
 		return err
 	}
 	meta := make(map[string]interface{})
 	for _, filter := range j.filters {
-		err = filter.Filter(ts, p, meta)
+		err = filter.Filter(ctx, ts, p, meta)
 		if err != nil {
 			return err
 		}
 	}
-	return j.output.Write(ts, line, meta)
+	return j.output.Write(ctx, ts, line, meta)
 }

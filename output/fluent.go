@@ -1,6 +1,7 @@
 package output
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -89,7 +90,7 @@ func (f *FluentOutput) Close() error {
 	return f.fluent.Close()
 }
 
-func (f *FluentOutput) Write(ts time.Time, line string, meta map[string]interface{}) error {
+func (f *FluentOutput) Write(ctx context.Context, ts time.Time, line string, meta map[string]interface{}) error {
 	v, err := f.parser.Parse(line)
 	if err != nil {
 		return err

@@ -1,6 +1,7 @@
 package output
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -24,7 +25,7 @@ func TestPrometheus(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	defer p.Close()
-	err = p.Write(time.Now(), `{
+	err = p.Write(context.TODO(), time.Now(), `{
 		"OriginStatus": 200,
 		"RequestMethod":"GET",
 		"Duration":42

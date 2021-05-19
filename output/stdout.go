@@ -1,6 +1,7 @@
 package output
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -14,7 +15,7 @@ func init() {
 type StdoutOutput struct {
 }
 
-func (s *StdoutOutput) Write(ts time.Time, line string, meta map[string]interface{}) error {
+func (s *StdoutOutput) Write(ctx context.Context, ts time.Time, line string, meta map[string]interface{}) error {
 	fmt.Printf("  %v\n  %v\n%v", ts, line, meta)
 	return nil
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -11,7 +12,7 @@ type OutputMockup struct {
 	lastTs time.Time
 }
 
-func (o *OutputMockup) Write(ts time.Time, line string, meta map[string]interface{}) error {
+func (o *OutputMockup) Write(ctx context.Context, ts time.Time, line string, meta map[string]interface{}) error {
 	o.lastTs = ts
 	return nil
 }
@@ -21,10 +22,11 @@ func (o *OutputMockup) Close() error {
 }
 
 func TestJsonEngine(t *testing.T) {
+	ctx := context.TODO()
 	o := &OutputMockup{}
 	e := NewJsonEngine(o)
 	now := time.Now()
-	err := e.Write(now, "{}")
+	err := e.Write(ctx, now, "{}")
 	assert.NoError(t, err)
 	assert.Equal(t, now, o.lastTs)
 }

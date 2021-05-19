@@ -26,20 +26,20 @@ type Demultiplexer struct {
 	admin   *admin.Admin
 }
 
-func (d *Demultiplexer) Write(ts time.Time, line string) error {
+func (d *Demultiplexer) Write(ctx context.Context, ts time.Time, line string) error {
 	meta := make(map[string]interface{})
 	data, err := d.parser.Parse(line)
 	if err != nil {
 		return err
 	}
 	for _, f := range d.filters {
-		err = f.Filter(ts, data, meta)
+		err = f.Filter(ctx, ts, data, meta)
 		if err != nil {
 			return err
 		}
 	}
 	for _, o := range d.outputs {
-		err = o.Write(ts, line, meta)
+		err = o.Write(ctx, ts, line, meta)
 		if err != nil {
 			return err
 		}

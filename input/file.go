@@ -64,7 +64,8 @@ func (f *FileInput) Start(ctx context.Context) error {
 					l.WithField("line", line).WithError(err).Info("Tail")
 					continue
 				}
-				err = f.writer.Write(line.Time, line.Text)
+				// a fresh context, just for this line
+				err = f.writer.Write(context.TODO(), line.Time, line.Text)
 				if err != nil {
 					l.WithField("line", line).WithError(err).Info("Write")
 					continue

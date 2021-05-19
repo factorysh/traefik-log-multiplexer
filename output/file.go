@@ -1,6 +1,7 @@
 package output
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sync"
@@ -57,7 +58,7 @@ func NewFile(pathPattern string) (*File, error) {
 	}, nil
 }
 
-func (f *File) Write(ts time.Time, line string, meta map[string]interface{}) error {
+func (f *File) Write(ctx context.Context, ts time.Time, line string, meta map[string]interface{}) error {
 	path, err := f.template.Execute(meta)
 	if err != nil {
 		return err
