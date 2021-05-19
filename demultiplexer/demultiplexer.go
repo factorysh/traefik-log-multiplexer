@@ -3,8 +3,10 @@ package demultiplexer
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/valyala/fastjson"
 
 	"github.com/factorysh/traefik-log-multiplexer/admin"
@@ -100,6 +102,9 @@ func New(cfg *conf.Config) (*Demultiplexer, error) {
 }
 
 func (d *Demultiplexer) Start(ctx context.Context) error {
+	if os.Getenv("SENTRY_DNS") != "" {
+		defer sentry.Recover()
+	}
 	d.admin.Start(ctx)
 	go func(i api.Input) {
 		err := i.Start(ctx)

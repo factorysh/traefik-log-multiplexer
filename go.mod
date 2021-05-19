@@ -7,6 +7,7 @@ require (
 	github.com/docker/docker v1.13.1
 	github.com/factorysh/docker-visitor v1.7.2
 	github.com/fluent/fluent-logger-golang v1.6.0
+	github.com/getsentry/sentry-go v0.10.0
 	github.com/imdario/mergo v0.3.12
 	github.com/influxdata/tail v1.0.0
 	github.com/mitchellh/mapstructure v1.4.1
