@@ -34,6 +34,7 @@ func init() {
 type DockerProvider struct {
 	containers *Containers
 	watcher    *visitor.Watcher
+	client     *client.Client
 }
 
 func DockerFactory(cfg map[string]interface{}) (api.Filter, error) {
@@ -68,6 +69,7 @@ func New(client *client.Client) *DockerProvider {
 	dp := &DockerProvider{
 		containers: NewContainers(),
 		watcher:    visitor.New(client),
+		client:     client,
 	}
 	dp.watcher.VisitCurrentCointainer(dp.create)
 	dp.watcher.WatchFor(dp.visitor)
@@ -76,6 +78,15 @@ func New(client *client.Client) *DockerProvider {
 }
 
 func (dp *DockerProvider) Start(ctx context.Context) error {
+	if hub := sentry.CurrentHub(); hub != nil {
+		info, err := dp.client.Info(context.TODO())
+		if err != nil {
+			return err
+		}
+		hub.PushScope().SetContext("Docker", map[string]interface{}{
+			"server_version": info.ServerVersion,
+		})
+	}
 	return dp.watcher.Start(ctx)
 }
 
