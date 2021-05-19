@@ -83,9 +83,13 @@ func (dp *DockerProvider) Start(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		hub.PushScope().SetContext("Docker", map[string]interface{}{
-			"server_version": info.ServerVersion,
-		})
+		hub.AddBreadcrumb(&sentry.Breadcrumb{
+			Category: "Filter: docker",
+			Data: map[string]interface{}{
+				"server_version": info.ServerVersion,
+				"client_version": dp.client.ClientVersion(),
+			},
+		}, nil)
 	}
 	return dp.watcher.Start(ctx)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/factorysh/traefik-log-multiplexer/api"
+	"github.com/getsentry/sentry-go"
 	"github.com/influxdata/tail"
 	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
@@ -42,6 +43,14 @@ func NewFileInput(rawCfg map[string]interface{}) (api.Input, error) {
 
 func (f *FileInput) Start(ctx context.Context) error {
 	l := log.WithField("path", f.path)
+	if hub := sentry.CurrentHub(); hub != nil {
+		hub.AddBreadcrumb(&sentry.Breadcrumb{
+			Category: "Input: file",
+			Data: map[string]interface{}{
+				"path": f.path,
+			},
+		}, &sentry.BreadcrumbHint{})
+	}
 	for {
 		t, err := tail.TailFile(f.path, tail.Config{Follow: true})
 		if err != nil {
