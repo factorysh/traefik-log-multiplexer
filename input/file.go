@@ -9,18 +9,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var Inputs map[string]InputFactory
-
 func init() {
 	if Inputs == nil {
-		Inputs = map[string]InputFactory{
-			"file": NewFileInput,
-		}
+		Inputs = make(map[string]InputFactory)
 	}
-
+	Inputs["file"] = NewFileInput
 }
-
-type InputFactory func(map[string]interface{}) (api.Input, error)
 
 type FileInput struct {
 	path   string
