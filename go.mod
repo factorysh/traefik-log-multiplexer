@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/docker/docker v20.10.11+incompatible
 	github.com/factorysh/docker-visitor v1.7.4
-	github.com/fluent/fluent-logger-golang v1.7.0
+	github.com/fluent/fluent-logger-golang v1.8.0
 	github.com/getsentry/sentry-go v0.11.0
 	github.com/grafana/loki v1.6.2-0.20211021114919-0ae0d4da122d
 	github.com/imdario/mergo v0.3.12
@@ -24,7 +24,7 @@ require (
 // Replace directives from Loki
 replace (
 	github.com/Azure/azure-sdk-for-go => github.com/Azure/azure-sdk-for-go v36.2.0+incompatible
-	github.com/hashicorp/consul => github.com/hashicorp/consul v1.10.1
+	github.com/hashicorp/consul => github.com/hashicorp/consul v1.10.2
 	github.com/hpcloud/tail => github.com/grafana/tail v0.0.0-20201004203643-7aa4e4a91f03
 	github.com/prometheus/prometheus => github.com/grafana/prometheus v1.8.2-0.20211103031328-89bb32ee4ae7
 	gopkg.in/yaml.v2 => github.com/rfratto/go-yaml v0.0.0-20200521142311-984fc90c8a04
