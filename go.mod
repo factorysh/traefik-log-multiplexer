@@ -3,10 +3,10 @@ module github.com/factorysh/traefik-log-multiplexer
 go 1.16
 
 require (
-	github.com/docker/docker v20.10.12+incompatible
+	github.com/docker/docker v20.10.13+incompatible
 	github.com/factorysh/docker-visitor v1.7.5
 	github.com/fluent/fluent-logger-golang v1.9.0
-	github.com/getsentry/sentry-go v0.12.0
+	github.com/getsentry/sentry-go v0.13.0
 	github.com/grafana/loki v1.6.2-0.20211021114919-0ae0d4da122d
 	github.com/imdario/mergo v0.3.12
 	github.com/influxdata/tail v1.0.1-0.20200707181643-03a791b270e4
